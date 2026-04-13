@@ -1,0 +1,92 @@
+You are an expert solution architect specializing in AI agent-based systems, enterprise security, and distributed architectures. Design a detailed solution architecture for the following scenario.
+
+=== BUSINESS CONTEXT ===
+
+A consumer products company (beverage industry) needs an AI agent-based solution to support product team decision-making. The solution is strictly analytical and advisory — it must never execute operational actions. All AI-generated outputs must be explainable and traceable.
+
+=== AGENT ARCHITECTURE ===
+
+The solution requires 3 agent types:
+
+1. PRIMARY AGENT
+   - Performs aggregated analyses on enterprise data from the main organization.
+   - Identifies high-impact territories across brands and product packages.
+   - Produces well-explained analytical outputs that direct the focus for the Partner Agent.
+   - Accesses data exclusively from the main organization's enterprise data sources.
+
+2. PARTNER AGENT
+   - Performs operational deep-dives on partner data, focused on areas identified by the Primary Agent.
+   - Identifies consumption clusters.
+   - Each partner is an independent company with its own infrastructure and IT staff.
+   - There must be one specialized agent instance per partner, implying a distributed topology.
+   - Accesses data hosted in each partner's own infrastructure.
+
+3. AUDITOR AGENT
+   - Performs independent review and quality control over outputs from both the Primary and Partner agents.
+   - Verifies analytical consistency, identifying inconsistencies or failures.
+   - Acts as an internal quality assurance layer before the final human decision.
+
+=== ANALYTICAL FLOW ===
+
+The orchestrated flow between agents must follow this sequence:
+1. Primary Agent performs aggregated analysis → produces output
+2. Human approves the transition (human-in-the-loop checkpoint)
+3. Partner Agent(s) perform operational deep-dive based on Primary Agent's focus
+4. Human approves the transition (human-in-the-loop checkpoint)
+5. Auditor Agent independently reviews outputs from both previous stages
+6. Human receives all outputs for final decision
+
+=== CORE PRINCIPLES AND CONSTRAINTS ===
+
+- EXPLAINABILITY: Every AI-generated output must be justifiable and traceable. The solution must never behave as a black box.
+- HUMAN-IN-THE-LOOP: Humans must approve every transition between analytical stages. No stage proceeds without explicit human approval.
+- DATA GOVERNANCE: Strict control over who accesses what data. Partner data stays within partner infrastructure boundaries.
+- ENTERPRISE SECURITY: The solution must adhere to corporate security standards.
+- NO OPERATIONAL ACTIONS: The solution only produces analyses — it never executes business operations or modifies data.
+
+=== OBSERVABILITY REQUIREMENTS ===
+
+The solution must implement basic logging and monitoring to support operational oversight, quality assurance, and governance alignment.
+
+System-level logging must include:
+- User actions (event-level only, no content)
+- Agent execution flows and execution identifiers
+- Errors, failures, and timeouts
+- Content moderation and scope-control events
+- System version and technical metadata
+
+Basic monitoring must provide visibility into:
+- Agent availability and execution success
+- Recurrent failures or degraded behavior
+- Data source availability issues
+
+Critical observability constraints:
+- NO logging of user prompts or AI-generated content
+- NO advanced enterprise observability tooling unless explicitly proposed
+- NO real-time review of individual interactions
+
+=== KEY ARCHITECTURAL CHALLENGES TO ADDRESS ===
+
+1. DISTRIBUTED TOPOLOGY: Each partner is an independent organization with its own infrastructure. Address network connectivity, authentication, data sovereignty, and latency considerations.
+
+2. AUDITOR INDEPENDENCE: How to ensure the Auditor Agent is truly independent and not influenced by the models, context, or biases of the other agents.
+
+3. HUMAN-IN-THE-LOOP ORCHESTRATION: The approval mechanism must be a first-class citizen in the orchestration flow, not an afterthought. Address state management, timeout handling, and approval persistence.
+
+4. CONTENT-FREE OBSERVABILITY: Logging execution without logging content requires a carefully designed logging strategy. Address how to maintain traceability and auditability without capturing prompts or generated content.
+
+5. DATA ISOLATION: Ensure strict separation between main organization data and partner data, especially considering agents may need to correlate insights across boundaries.
+
+=== EXPECTED OUTPUT ===
+
+Provide a comprehensive architecture proposal that includes:
+
+1. High-level architecture diagram description (components, boundaries, data flows).
+2. Agent orchestration pattern and technology recommendations.
+3. Human-in-the-loop mechanism design.
+4. Data access and governance strategy (especially for the distributed partner topology).
+5. Security architecture (authentication, authorization, network boundaries).
+6. Observability architecture (logging, monitoring) respecting the content-free constraints.
+7. Key architectural decisions with trade-off analysis for each.
+8. Recommended technology stack with justifications.
+9. Risk assessment and mitigation strategies.

@@ -1,0 +1,236 @@
+<mxfile host="65bd71144e">
+    <diagram id="demo-arch" name="Demo Architecture">
+        <mxGraphModel dx="1223" dy="602" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="&lt;b&gt;Multi-Agent Orchestration Demo — Architecture&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Microsoft Agent Framework (MAF) 1.0 + Azure Service Bus&lt;/i&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="440" y="20" width="520" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="local-boundary" value="&lt;b&gt;Local Execution (Developer Machine)&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;dashPattern=5 5;strokeColor=#666666;fillColor=none;verticalAlign=top;align=left;spacingLeft=10;spacingTop=5;fontSize=12;arcSize=6;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="90" width="660" height="530" as="geometry"/>
+                </mxCell>
+                <mxCell id="azure-boundary" value="&lt;b&gt;Azure Cloud&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;dashPattern=5 5;strokeColor=#0078D4;fillColor=#E6F2FF;verticalAlign=top;align=left;spacingLeft=10;spacingTop=5;fontSize=12;arcSize=6;opacity=40;" parent="1" vertex="1">
+                    <mxGeometry x="780" y="90" width="760" height="530" as="geometry"/>
+                </mxCell>
+                <mxCell id="client" value="&lt;b&gt;Client&lt;/b&gt;&lt;br/&gt;&lt;i&gt;sample/client/&lt;/i&gt;&lt;br/&gt;&lt;br/&gt;Interactive Python CLI&lt;br/&gt;httpx" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#333333;verticalAlign=middle;align=center;fontSize=11;spacingTop=5;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="160" width="200" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="client-icon" value="" style="shape=mxgraph.azure.user;" parent="1" vertex="1">
+                    <mxGeometry x="90" y="165" width="30" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="orch-group" value="&lt;b&gt;Orchestrator&lt;/b&gt;&lt;br/&gt;&lt;i&gt;sample/app-orchestrator/&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCEDC8;strokeColor=#558B2F;verticalAlign=top;align=center;fontSize=11;spacingTop=5;arcSize=8;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="340" width="580" height="250" as="geometry"/>
+                </mxCell>
+                <mxCell id="fastapi" value="&lt;b&gt;FastAPI + Uvicorn&lt;/b&gt;&lt;br/&gt;POST /api/ask&lt;br/&gt;Port 7071" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#558B2F;fontSize=10;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="110" y="395" width="150" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="primary-agent" value="&lt;b&gt;Primary Agent&lt;/b&gt;&lt;br/&gt;&lt;i&gt;MAF 1.0 Agent&lt;/i&gt;&lt;br/&gt;Territory Analyst" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#558B2F;fontSize=10;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="110" y="490" width="150" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="sb-publisher" value="&lt;b&gt;Service Bus Publisher&lt;/b&gt;&lt;br/&gt;Topic: agent-requests&lt;br/&gt;Queue: agent-responses" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#558B2F;fontSize=10;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="350" y="395" width="180" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="blob-logger-orch" value="&lt;b&gt;Blob Logger&lt;/b&gt;&lt;br/&gt;Correlation-based logs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#558B2F;fontSize=10;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="350" y="490" width="180" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="partner-group" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1565C0;verticalAlign=top;align=center;fontSize=11;spacingTop=5;arcSize=8;" parent="1" vertex="1">
+                    <mxGeometry x="340" y="140" width="330" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="partner-label" value="&lt;b&gt;Partner Agent&lt;/b&gt;&lt;br/&gt;&lt;i&gt;sample/app-partner-agent/&lt;/i&gt;" style="text;html=1;align=center;verticalAlign=top;fontSize=11;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="148" width="220" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="sb-receiver" value="&lt;b&gt;Service Bus Receiver&lt;/b&gt;&lt;br/&gt;Subscription: partner-agent-sub&lt;br/&gt;on topic: agent-requests" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1565C0;fontSize=10;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="360" y="185" width="190" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="partner-agent" value="&lt;b&gt;Partner Agent&lt;/b&gt;&lt;br/&gt;&lt;i&gt;MAF 1.0 Agent&lt;/i&gt;&lt;br/&gt;Distribution Analyst" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1565C0;fontSize=10;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="360" y="255" width="190" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="servicebus" value="" style="shape=mxgraph.azure.service_bus;printerFont=1;" parent="1" vertex="1">
+                    <mxGeometry x="880" y="170" width="50" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="servicebus-label" value="&lt;b&gt;Azure Service Bus&lt;/b&gt;&lt;br/&gt;&lt;i&gt;sbns-demo-orchestrator&lt;/i&gt;&lt;br/&gt;Standard Tier" style="text;html=1;align=center;verticalAlign=top;fontSize=11;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="830" y="225" width="180" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="topic-box" value="&lt;b&gt;Topic&lt;/b&gt;&lt;br/&gt;agent-requests&lt;br/&gt;&lt;hr/&gt;&lt;b&gt;Subscription&lt;/b&gt;&lt;br/&gt;partner-agent-sub" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;fontSize=10;verticalAlign=middle;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="830" y="290" width="160" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="queue-box" value="&lt;b&gt;Queue&lt;/b&gt;&lt;br/&gt;agent-responses" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;fontSize=10;verticalAlign=middle;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="830" y="400" width="160" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="aoai-primary" value="" style="shape=mxgraph.azure.open_ai;printerFont=1;" parent="1" vertex="1">
+                    <mxGeometry x="1120" y="170" width="50" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="aoai-primary-label" value="&lt;b&gt;Azure OpenAI&lt;/b&gt;&lt;br/&gt;&lt;i&gt;aoai-demo-orchestrator&lt;/i&gt;&lt;br/&gt;Deployment: primary-agent" style="text;html=1;align=center;verticalAlign=top;fontSize=11;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="1060" y="225" width="200" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="aoai-partner" value="" style="shape=mxgraph.azure.open_ai;printerFont=1;" parent="1" vertex="1">
+                    <mxGeometry x="1350" y="170" width="50" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="aoai-partner-label" value="&lt;b&gt;Azure OpenAI&lt;/b&gt;&lt;br/&gt;&lt;i&gt;aoai-demo-partner&lt;/i&gt;&lt;br/&gt;Deployment: partner-agent" style="text;html=1;align=center;verticalAlign=top;fontSize=11;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="1290" y="225" width="200" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="storage" value="" style="shape=mxgraph.azure.storage;printerFont=1;" parent="1" vertex="1">
+                    <mxGeometry x="1120" y="395" width="50" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="storage-label" value="&lt;b&gt;Azure Storage Account&lt;/b&gt;&lt;br/&gt;&lt;i&gt;stdemoorchestrator&lt;/i&gt;&lt;br/&gt;Container: agent-logs" style="text;html=1;align=center;verticalAlign=top;fontSize=11;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="1050" y="450" width="220" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="identity" value="" style="shape=mxgraph.azure.azure_active_directory;printerFont=1;" parent="1" vertex="1">
+                    <mxGeometry x="1350" y="395" width="50" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="identity-label" value="&lt;b&gt;Microsoft Entra ID&lt;/b&gt;&lt;br/&gt;DefaultAzureCredential&lt;br/&gt;&lt;i&gt;(az login for local dev)&lt;/i&gt;" style="text;html=1;align=center;verticalAlign=top;fontSize=11;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="1280" y="450" width="200" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="flow1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#333333;strokeWidth=2;" parent="1" target="fastapi" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="185" y="260" as="sourcePoint"/>
+                        <Array as="points">
+                            <mxPoint x="185" y="260"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow1-label" value="&lt;b&gt;1&lt;/b&gt; HTTP POST /api/ask" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=9;fontColor=#333333;" parent="flow1" connectable="0" vertex="1">
+                    <mxGeometry x="0.2" relative="1" as="geometry">
+                        <mxPoint x="65" y="-10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#558B2F;strokeWidth=2;" parent="1" source="fastapi" target="primary-agent" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="flow2-label" value="&lt;b&gt;2&lt;/b&gt; agent.run()" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=9;fontColor=#558B2F;" parent="flow2" connectable="0" vertex="1">
+                    <mxGeometry x="0.2" relative="1" as="geometry">
+                        <mxPoint x="45" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#0078D4;strokeWidth=2;dashed=1;" parent="1" source="primary-agent" target="aoai-primary" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="90" y="523"/>
+                            <mxPoint x="90" y="680"/>
+                            <mxPoint x="1100" y="680"/>
+                            <mxPoint x="1100" y="195"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow3-label" value="&lt;b&gt;3&lt;/b&gt; Chat Completion (Azure OpenAI)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=9;fontColor=#0078D4;" parent="flow3" connectable="0" vertex="1">
+                    <mxGeometry x="0.5" relative="1" as="geometry">
+                        <mxPoint y="15" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#E65100;strokeWidth=2;" parent="1" source="sb-publisher" target="topic-box" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="flow4-label" value="&lt;b&gt;4&lt;/b&gt; Publish request" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=9;fontColor=#E65100;" parent="flow4" connectable="0" vertex="1">
+                    <mxGeometry x="-0.2" relative="1" as="geometry">
+                        <mxPoint y="-12" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;exitX=0;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#E65100;strokeWidth=2;" parent="1" source="topic-box" target="sb-receiver" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="760" y="290"/>
+                            <mxPoint x="760" y="215"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow5-label" value="&lt;b&gt;5&lt;/b&gt; Receive message" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=9;fontColor=#E65100;" parent="flow5" connectable="0" vertex="1">
+                    <mxGeometry x="0.2" relative="1" as="geometry">
+                        <mxPoint y="-12" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#0078D4;strokeWidth=2;dashed=1;" parent="1" source="partner-agent" target="aoai-partner" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="710" y="278"/>
+                            <mxPoint x="710" y="140"/>
+                            <mxPoint x="1375" y="140"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow6-label" value="&lt;b&gt;6&lt;/b&gt; Chat Completion (Azure OpenAI)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=9;fontColor=#0078D4;" parent="flow6" connectable="0" vertex="1">
+                    <mxGeometry x="0.3" relative="1" as="geometry">
+                        <mxPoint y="-12" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#E65100;strokeWidth=2;" parent="1" source="sb-receiver" target="queue-box" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="720" y="245"/>
+                            <mxPoint x="720" y="428"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow7-label" value="&lt;b&gt;7&lt;/b&gt; Publish response" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=9;fontColor=#E65100;" parent="flow7" connectable="0" vertex="1">
+                    <mxGeometry x="0.2" relative="1" as="geometry">
+                        <mxPoint y="-12" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;exitX=0;exitY=0.75;exitDx=0;exitDy=0;strokeColor=#E65100;strokeWidth=2;dashed=1;dashPattern=8 4;" parent="1" source="queue-box" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="830" y="440"/>
+                            <mxPoint x="530" y="440"/>
+                        </Array>
+                        <mxPoint x="530" y="440" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow8-label" value="&lt;b&gt;8&lt;/b&gt; Poll response (sync)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=9;fontColor=#E65100;" parent="flow8" connectable="0" vertex="1">
+                    <mxGeometry x="-0.1" relative="1" as="geometry">
+                        <mxPoint x="5" y="10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#7B1FA2;strokeWidth=1;dashed=1;" parent="1" source="blob-logger-orch" target="storage" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="600" y="523"/>
+                            <mxPoint x="600" y="540"/>
+                            <mxPoint x="1080" y="540"/>
+                            <mxPoint x="1080" y="420"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow9-label" value="Logs" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=9;fontColor=#7B1FA2;" parent="flow9" connectable="0" vertex="1">
+                    <mxGeometry x="0.3" relative="1" as="geometry">
+                        <mxPoint y="-10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;exitX=0.171;exitY=0.004;exitDx=0;exitDy=0;entryX=0.285;entryY=0.987;entryDx=0;entryDy=0;strokeColor=#333333;strokeWidth=2;dashed=1;dashPattern=8 4;entryPerimeter=0;exitPerimeter=0;" parent="1" source="fastapi" target="client" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="137" y="395"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow10-label" value="&lt;b&gt;9&lt;/b&gt; Combined response" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=9;fontColor=#333333;" parent="flow10" connectable="0" vertex="1">
+                    <mxGeometry x="-0.2" relative="1" as="geometry">
+                        <mxPoint x="-55" y="5" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="auth1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#999999;strokeWidth=1;dashed=1;dashPattern=3 3;" parent="1" source="blob-logger-orch" target="identity" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="620" y="506"/>
+                            <mxPoint x="620" y="560"/>
+                            <mxPoint x="1375" y="560"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="auth1-label" value="auth" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=8;fontColor=#999999;" parent="auth1" connectable="0" vertex="1">
+                    <mxGeometry x="0.5" relative="1" as="geometry">
+                        <mxPoint y="-8" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="legend" value="&lt;b&gt;Legend&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#CCCCCC;verticalAlign=top;align=left;spacingLeft=10;spacingTop=5;fontSize=11;arcSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="880" y="730" width="540" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="leg1" value="&lt;font color=&quot;#558B2F&quot;&gt;━━&lt;/font&gt; Local MAF call&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;font color=&quot;#E65100&quot;&gt;━━&lt;/font&gt; Service Bus messaging&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;font color=&quot;#0078D4&quot;&gt;╌╌&lt;/font&gt; Azure OpenAI call&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;font color=&quot;#7B1FA2&quot;&gt;╌╌&lt;/font&gt; Blob log upload&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;font color=&quot;#999999&quot;&gt;···&lt;/font&gt; Entra ID auth" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="900" y="755" width="500" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="leg2" value="All auth via &lt;b&gt;DefaultAzureCredential&lt;/b&gt; (no keys/connection strings). Numbers show the request flow sequence (1→9)." style="text;html=1;align=left;verticalAlign=middle;fontSize=10;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="900" y="780" width="500" height="20" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
