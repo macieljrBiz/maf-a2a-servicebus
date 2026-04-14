@@ -3,7 +3,7 @@
 ## Overview
 
 This repository contains the **architecture analysis** of an AI agent-based solution designed to **support product team decision-making** in the beverage (consumer products) industry.
-This is a sample use case to demonstrate MAF (Microsoft Agent Framework 1.0) and A2A implementation using Azure Service Bus as integrator.
+This is a sample use case to demonstrate MAF (Microsoft Agent Framework 1.0) and A2A implementation using Azure Service Bus as integrator. It also includes an analysis of a future migration to the **native A2A (Agent-to-Agent) protocol** built into MAF, which would replace the Service Bus transport with direct HTTP-based agent communication — see [`sample/FUTURE-A2A.md`](sample/FUTURE-A2A.md) for details.
 
 The solution is **analytical and advisory** — it does not execute operational actions. Its goal is to provide explainable and traceable analyses that assist humans in making decisions about territories, brands, and product packages.
 
