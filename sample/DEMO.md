@@ -1,5 +1,7 @@
 # Sample Demo — Multi-Agent Orchestration with MAF 1.0
 
+> **Author:** Vicente Maciel Junior — vicentem@microsoft.com — Cloud & AI Solutions Architect
+
 > **Looking ahead:** A future migration from Azure Service Bus to the native **A2A (Agent-to-Agent) protocol** is documented in [FUTURE-A2A.md](FUTURE-A2A.md). The A2A approach simplifies the architecture and enables cross-framework interoperability, but the required `agent-framework-a2a` package is still in preview — so this demo uses Service Bus for stability.
 
 This sample demonstrates a **multi-agent orchestration pattern** using [Microsoft Agent Framework (MAF) 1.0](https://learn.microsoft.com/en-us/agent-framework/overview/?pivots=programming-language-python) (GA) and Azure Service Bus. It shows how a locally defined agent and a remote agent can collaborate through asynchronous messaging, running as plain Python applications.

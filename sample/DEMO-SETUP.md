@@ -1,5 +1,7 @@
 # Demo Setup Guide
 
+> **Author:** Vicente Maciel Junior — vicentem@microsoft.com — Cloud & AI Solutions Architect
+
 This guide covers everything you need to deploy on Azure and configure locally to run the multi-agent orchestration demo.
 
 ## Prerequisites

@@ -1,3 +1,6 @@
+# Author: Vicente Maciel Junior (vicentem@microsoft.com)
+# Cloud & AI Solutions Architect
+
 import json
 import sys
 import uuid

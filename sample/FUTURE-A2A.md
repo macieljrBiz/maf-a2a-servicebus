@@ -1,5 +1,7 @@
 # Future: Native MAF A2A Integration
 
+> **Author:** Vicente Maciel Junior — vicentem@microsoft.com — Cloud & AI Solutions Architect
+
 This document describes a future migration path from the current Azure Service Bus transport to the **A2A (Agent-to-Agent) protocol** built into Microsoft Agent Framework (MAF). The A2A approach offers significant architectural advantages, but the required package (`agent-framework-a2a`) is still in **preview** as of April 2026. The current Service Bus implementation remains the recommended choice for stability.
 
 ---

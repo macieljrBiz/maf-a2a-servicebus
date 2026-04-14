@@ -1,5 +1,7 @@
 # Architecture Analysis — Agentic Solution for Product Decision Support
 
+> **Author:** Vicente Maciel Junior — vicentem@microsoft.com — Cloud & AI Solutions Architect
+
 ## Overview
 
 This repository contains the **architecture analysis** of an AI agent-based solution designed to **support product team decision-making** in the beverage (consumer products) industry.
