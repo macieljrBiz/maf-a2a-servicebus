@@ -90,8 +90,8 @@ def main():
                 f"{ORCHESTRATOR_URL}"
             )
             print(
-                f"[{_ts()}] Make sure the orchestrator function is running "
-                f"(func start --port 7071)."
+                f"[{_ts()}] Make sure the orchestrator is running "
+                f"(uv run python main.py)."
             )
             print()
         except httpx.ReadTimeout:

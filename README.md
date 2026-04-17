@@ -5,7 +5,9 @@
 ## Overview
 
 This repository contains the **architecture analysis** of an AI agent-based solution designed to **support product team decision-making** in the beverage (consumer products) industry.
-This is a sample use case to demonstrate MAF (Microsoft Agent Framework 1.0) and A2A implementation using Azure Service Bus as integrator. It also includes an analysis of a future migration to the **native A2A (Agent-to-Agent) protocol** built into MAF, which would replace the Service Bus transport with direct HTTP-based agent communication — see [`sample/FUTURE-A2A.md`](sample/FUTURE-A2A.md) for details.
+This is a sample use case to demonstrate MAF (Microsoft Agent Framework 1.0) and the **A2A (Agent-to-Agent) protocol** for direct inter-agent communication over HTTP. For a comparison between the A2A approach and the previous Azure Service Bus approach, see [`sample/COMPARISON-SB-VS-A2A.md`](sample/COMPARISON-SB-VS-A2A.md).
+
+> **Disclaimer**: This sample is based on a **fictional beverage company**. All company names, brand names (Velvet Ember, Midnight Drift, Silver Mist, Golden Breeze, Coral Bloom), regions, territories, and data used throughout the demo are entirely fictional and do not represent any real company or product.
 
 The solution is **analytical and advisory** — it does not execute operational actions. Its goal is to provide explainable and traceable analyses that assist humans in making decisions about territories, brands, and product packages.
 
@@ -84,7 +86,7 @@ flowchart TD
 | **Presentation** | Azure Static Web App | Product team interface and human approval UI |
 | **API Gateway** | Azure API Management | Single entry point, authentication enforcement, rate limiting |
 | **Orchestration** | Python app (FastAPI + uvicorn) + Microsoft Agent Framework (MAF) | Workflow engine managing agent sequencing and HITL checkpoints |
-| **Async Messaging** | Azure Service Bus | Cross-boundary communication with partner agents |
+| **Agent Communication** | A2A (Agent-to-Agent) protocol over HTTP | Direct inter-agent communication using open standard Agent Cards and JSON-RPC |
 | **State Management** | Azure Cosmos DB | Workflow state and approval status persistence |
 | **AI Agents** | Azure AI Foundry | Primary Agent and Auditor Agent hosted centrally |
 | **Partner Agents** | Partner-owned infrastructure | One agent per partner, deployed in their own environment |
@@ -102,33 +104,34 @@ The orchestration flow:
 
 1. **MAF Orchestrator invokes the Primary Agent** (direct call via MAF SDK) — the agent reads enterprise data and produces an aggregated analysis.
 2. **Workflow pauses** — state is persisted to Cosmos DB and the Product Team is notified for approval.
-3. **On human approval**, the orchestrator **publishes a message to Service Bus** to invoke Partner Agent(s) asynchronously.
-4. **Partner Agent(s) execute locally** in their own infrastructure, reading partner data and producing results. Results are published back to Service Bus.
+3. **On human approval**, the orchestrator **resolves the Partner Agent’s A2A Agent Card** and calls the agent directly via the A2A protocol over HTTP.
+4. **Partner Agent(s) execute locally** in their own infrastructure, reading partner data and producing results. Results are returned via the A2A response protocol.
 5. **Workflow pauses again** for a second human approval.
 6. **On approval**, the orchestrator **invokes the Auditor Agent** (direct call via MAF SDK) for independent review.
 7. **Final output is delivered** to the Product Team for decision.
 
 ### Cross-Boundary Communication with Partners
 
-Partner Agents live in **completely separate infrastructure** owned by independent companies. The architecture uses **Azure Service Bus** as the cross-boundary bridge:
+Partner Agents live in **completely separate infrastructure** owned by independent companies. The architecture uses the **A2A (Agent-to-Agent) protocol** for cross-boundary communication:
 
-- The MAF Orchestrator **publishes structured requests** to a Service Bus topic (no raw data crosses the boundary).
-- Partner infrastructure **subscribes** to the topic and processes requests locally.
-- Results are **published back** to a response queue on Service Bus.
-- Partners are **not required to use MAF** — they only need to consume and produce Service Bus messages conforming to a shared contract.
+- Each Partner Agent **hosts an A2A HTTP endpoint** that publishes an Agent Card describing its capabilities, skills, and supported interaction modes.
+- The MAF Orchestrator **discovers Partner Agents** by resolving their Agent Cards at `/.well-known/agent.json`.
+- Requests and responses flow via **A2A JSON-RPC** over HTTP — direct, synchronous, and contract-driven.
+- Partners are **not required to use MAF** — they only need to implement the open A2A protocol specification.
 
-This pattern ensures **data sovereignty** (partner data never leaves partner infrastructure), **loose coupling** (partners can be temporarily offline), and **technology agnosticism** (partners choose their own implementation stack).
+This pattern ensures **technology agnosticism** (any framework that speaks A2A can participate), **self-description** (Agent Cards enable automated discovery), and **simplicity** (no middleware infrastructure required). For scenarios requiring **durable messaging** (offline partners, guaranteed delivery), Azure Service Bus can be layered as a transport — see [COMPARISON-SB-VS-A2A.md](sample/COMPARISON-SB-VS-A2A.md).
 
 ### Key Architectural Decisions
 
-1. **Service Bus over REST APIs for partner communication** — async messaging avoids synchronous timeout risks, eliminates the need for partners to expose public endpoints, and handles partner downtime gracefully.
+1. **A2A protocol for partner communication** — open standard enabling direct HTTP-based agent-to-agent calls with built-in service discovery (Agent Cards), eliminating the need for middleware infrastructure. Partners expose A2A endpoints and the orchestrator discovers and calls them directly.
 2. **Cosmos DB for workflow state** — enables HITL checkpoints to persist state across human review sessions that may take hours or days.
 3. **Auditor Agent independence** — the Auditor Agent runs with a separate context and model configuration to ensure it is not influenced by the Primary or Partner agents.
 4. **Event-level only observability** — logging captures execution flows, errors, and metadata without recording prompts or AI-generated content, preserving the content-free constraint.
 
 ## Sample Demo
 
-A minimal sample implementation is available under `sample/` to demonstrate the multi-agent orchestration pattern with MAF, Azure Service Bus, and plain Python applications.
+A minimal sample implementation is available under `sample/` to demonstrate the multi-agent orchestration pattern with MAF, the A2A protocol, and plain Python applications.
 
 - **[Demo Overview](sample/DEMO.md)** — how the demo works, components, execution flow, logging strategy, and production disclaimers.
 - **[Demo Setup Guide](sample/DEMO-SETUP.md)** — step-by-step instructions for deploying the required Azure resources, configuring the environment, and running the demo.
+- **[Service Bus vs A2A Comparison](sample/COMPARISON-SB-VS-A2A.md)** — detailed comparison of the two communication approaches.

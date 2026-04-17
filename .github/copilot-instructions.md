@@ -20,43 +20,44 @@ The project includes a minimal sample implementation under `sample/` to demonstr
 - **Language**: Python
 - **Package manager**: uv
 - **Agent framework**: [Microsoft Agent Framework (MAF) 1.0](https://learn.microsoft.com/en-us/agent-framework/overview/?pivots=programming-language-python) — GA, successor to AutoGen and Semantic Kernel
-  - Python packages: `agent-framework` (core) + `agent-framework-openai` (Azure OpenAI provider)
+  - Python packages: `agent-framework` (core) + `agent-framework-openai` (Azure OpenAI provider) + `agent-framework-a2a` (A2A client, preview) + `a2a-sdk` (A2A server)
   - Agent class: `Agent` from `agent_framework` with `OpenAIChatCompletionClient` from `agent_framework.openai`
   - Azure OpenAI routing: pass `azure_endpoint` and `credential` (`DefaultAzureCredential`) to `OpenAIChatCompletionClient`
   - The old `AzureOpenAI*` compatibility classes were removed — always use `agent_framework.openai`
 - **Orchestrator**: Python app with FastAPI + uvicorn (HTTP server, local execution)
-- **Partner Agent**: Python app with async Service Bus receiver loop (local execution)
-- **Messaging**: Azure Service Bus (Standard tier)
+- **Partner Agent**: Python app hosting an A2A HTTP server (Starlette + uvicorn, local execution)
+- **Agent Communication**: A2A (Agent-to-Agent) protocol over HTTP — direct inter-agent calls with Agent Card discovery
 - **Logging**: Azure Storage Account (log files per execution)
 - **LLM**: Azure OpenAI (separate deployment per agent)
 
 ### Architecture
 - **Client** (`sample/client/`): Interactive Python CLI script.
 - **Orchestrator** (`sample/app-orchestrator/`): MAF 1.0 orchestrator + Primary Agent. FastAPI HTTP server. Uses `Agent` + `OpenAIChatClient` with Azure routing.
-- **Partner Agent** (`sample/app-partner-agent/`): Partner Agent. Async Service Bus receiver loop. Uses `Agent` + `OpenAIChatClient` with Azure routing.
+- **Partner Agent** (`sample/app-partner-agent/`): Partner Agent. A2A HTTP server on port 8072. Uses `Agent` + `OpenAIChatClient` with Azure routing.
 
 ### Use-Case Scenario
+- **Disclaimer**: This sample is based on a **fictional beverage company**. All company names, brand names (Velvet Ember, Midnight Drift, Silver Mist, Golden Breeze, Coral Bloom), regions, territories, and data are entirely fictional and do not represent any real company or product.
 - **Input**: Free-text question from the user (no scenario selector).
 - **Primary Agent**: Aggregated territory analysis — identifies relevant territories, ranks by key metrics, recommends focus areas.
 - **Partner Agent**: Operational deep-dive — analyzes consumption clusters, retail density, distribution coverage, and demand patterns within recommended territories.
 - **Simulated data**: No real data sources. Each agent's system prompt includes a comprehensive simulated dataset covering multiple regions, territories, brands, and SKUs.
 - **Final output**: Orchestrator combines both analyses into a consolidated view.
 - **Suggested test questions**:
-  1. "Analyze the opportunity for launching a 350ml Classic Cola can in the Southeast region. Which territories show the highest potential based on current brand performance?"
-  2. "Zero Cola has been declining in the Northeast region over the last two quarters. What's driving the drop, and which territories need immediate attention?"
+  1. "Analyze the opportunity for launching a 350ml Velvet Ember can in the Southeast region. Which territories show the highest potential based on current brand performance?"
+  2. "Midnight Drift has been declining in the Northeast region over the last two quarters. What's driving the drop, and which territories need immediate attention?"
   3. "We're rationalizing the product portfolio in the Midwest region. Which low-performing SKUs should we consider discontinuing, and what's the risk of losing shelf space?"
-  4. "Summer peak is approaching. Based on last year's performance, which territories in the South region need increased distribution capacity for the Classic Cola 2L package?"
+  4. "Summer peak is approaching. Based on last year's performance, which territories in the South region need increased distribution capacity for the Velvet Ember 2L package?"
 
 ### Design Decisions (Demo)
 - Plain Python apps instead of Azure Functions — removes runtime friction (extension bundles, embedded Python worker, PYTHONPATH issues) while preserving the same architectural pattern. Production should use Container Apps, App Service, or Functions with proper CI/CD.
-- Synchronous polling on Service Bus response — demo simplification. Production should use event-driven processing.
+- A2A protocol for inter-agent communication — direct HTTP calls with Agent Card discovery. For durable messaging scenarios (offline partners, guaranteed delivery), Service Bus can be layered as transport.
 - Single subscription with two resource groups simulates cross-organization boundaries.
 - HITL and Auditor Agent are out of scope for this demo.
 - Log files use correlation IDs and timestamps. No prompt or AI-generated content is logged.
 
 ### Configuration
 All configuration is provided via `.env` files. Required values:
-- Service Bus namespace (FQDN, no connection string)
+- Partner Agent A2A URL (default `http://localhost:8072`)
 - Storage Account URL (no connection string)
 - Azure OpenAI endpoint for each agent (no API keys)
 - Model deployment names

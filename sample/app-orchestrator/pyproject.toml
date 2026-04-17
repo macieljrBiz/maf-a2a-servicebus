@@ -5,13 +5,16 @@ requires-python = ">=3.11"
 dependencies = [
     "agent-framework",
     "agent-framework-openai",
+    "agent-framework-a2a",
+    "a2a-sdk",
     "azure-identity",
-    "azure-servicebus",
     "azure-storage-blob",
     "fastapi",
+    "httpx",
     "uvicorn",
     "python-dotenv",
 ]
 
 [tool.uv]
 package = false
+prerelease = "allow"

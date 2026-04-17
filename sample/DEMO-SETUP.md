@@ -4,6 +4,8 @@
 
 This guide covers everything you need to deploy on Azure and configure locally to run the multi-agent orchestration demo.
 
+> **Disclaimer**: This demo is based on a **fictional beverage company**. All brand names, regions, territories, and data referenced in the test questions and agent prompts are entirely fictional and do not represent any real company or product.
+
 ## Prerequisites
 
 - **Python 3.12** installed (Microsoft Agent Framework 1.0.1 is not compatible with Python 3.14; versions 3.10–3.13 are supported). If you use `uv`, it can install Python for you — see Step 1 below.
@@ -21,56 +23,7 @@ You need to create the following resources in your Azure subscription. We use **
 az group create --name rg-a2a-demo-orchestrator --location eastus
 ```
 
-#### 1. Azure Service Bus Namespace (Standard tier)
-
-Standard tier is required to support topics and subscriptions.
-
-```bash
-az servicebus namespace create \
-  --name sbns-demo-orchestrator \
-  --resource-group rg-a2a-demo-orchestrator \
-  --sku Standard \
-  --location eastus
-```
-
-Create the **topic** for sending requests to the Partner Agent:
-
-```bash
-az servicebus topic create \
-  --name agent-requests \
-  --namespace-name sbns-demo-orchestrator \
-  --resource-group rg-a2a-demo-orchestrator
-```
-
-Create a **subscription** on the topic for the Partner Agent to consume:
-
-```bash
-az servicebus topic subscription create \
-  --name partner-agent-sub \
-  --topic-name agent-requests \
-  --namespace-name sbns-demo-orchestrator \
-  --resource-group rg-a2a-demo-orchestrator
-```
-
-Create the **response queue** for the Partner Agent to send results back:
-
-```bash
-az servicebus queue create \
-  --name agent-responses \
-  --namespace-name sbns-demo-orchestrator \
-  --resource-group rg-a2a-demo-orchestrator
-```
-
-Assign **Azure Service Bus Data Owner** role to your user (required for `DefaultAzureCredential` access):
-
-```bash
-az role assignment create \
-  --role "Azure Service Bus Data Owner" \
-  --assignee $(az ad signed-in-user show --query id --output tsv) \
-  --scope $(az servicebus namespace show --name sbns-demo-orchestrator --resource-group rg-a2a-demo-orchestrator --query id --output tsv)
-```
-
-#### 2. Azure Storage Account (for log files)
+#### 1. Azure Storage Account (for log files)
 
 ```bash
 az storage account create \
@@ -106,7 +59,7 @@ az group create --name rg-a2a-demo-partner --location eastus
 
 > **Note**: In production, this resource group would be in a separate subscription/tenant owned by the partner organization. For the demo, we use a separate resource group in the same subscription to simulate the boundary.
 
-No additional resources are needed in this group for local execution — the Partner Agent Function App only needs access to the shared Service Bus and its own Azure OpenAI deployment.
+No additional resources are needed in this group for local execution — the Partner Agent only needs its own Azure OpenAI deployment. Communication with the orchestrator uses the **A2A protocol** over HTTP (localhost).
 
 ### Azure OpenAI Deployments
 
@@ -252,8 +205,8 @@ All configuration is managed via a single `.env` file in the `sample/` directory
 Create `sample/.env` with the following content, replacing the placeholder values with your actual values:
 
 ```env
-# Azure Service Bus (identity-based auth via DefaultAzureCredential)
-SERVICEBUS_NAMESPACE=sbns-demo-orchestrator.servicebus.windows.net
+# Partner Agent A2A endpoint (local)
+PARTNER_AGENT_A2A_URL=http://localhost:8072
 
 # Azure Storage Account (identity-based auth via DefaultAzureCredential)
 STORAGE_ACCOUNT_URL=https://stdemoorchestrator.blob.core.windows.net/
@@ -281,7 +234,7 @@ Before starting the applications, make sure you have an active Azure CLI session
 az login
 ```
 
-`DefaultAzureCredential` falls back to `AzureCliCredential` for local execution, so all three applications require a valid `az login` session to access Service Bus, Storage, and Azure OpenAI.
+`DefaultAzureCredential` falls back to `AzureCliCredential` for local execution, so all three applications require a valid `az login` session to access Storage and Azure OpenAI.
 
 ### Step 2: (Optional) Install Python 3.12 via uv
 
@@ -303,9 +256,9 @@ uv sync --python 3.12
 uv run python main.py
 ```
 
-**Wait until you see**: `Partner Agent started — waiting for messages on Service Bus`
+**Wait until you see**: `Partner Agent A2A server starting...` followed by `Uvicorn running on http://localhost:8072`
 
-This confirms the agent connected to the Service Bus subscription and is ready to process requests.
+This confirms the agent is hosting its A2A endpoint and is ready to receive requests.
 
 ### Step 4: Start the Orchestrator (Terminal 2)
 
@@ -333,26 +286,26 @@ uv run python main.py
 
 The client opens an interactive prompt. Type a question and press Enter. For example:
 
-> *Analyze the opportunity for launching a 350ml Classic Cola can in the Southeast region. Which territories show the highest potential based on current brand performance?*
+> *Analyze the opportunity for launching a 350ml Velvet Ember can in the Southeast region. Which territories show the highest potential based on current brand performance?*
 
 The response may take 30–60 seconds as both agents process the request.
 
 ### What Happens Under the Hood
 
 1. The **Client** sends your question via HTTP POST to `http://localhost:7071/api/ask`.
-2. The **Orchestrator** invokes the **Primary Agent** (territory analysis via Azure OpenAI), then publishes the result to Service Bus topic `agent-requests`.
-3. The **Partner Agent** picks up the message from its subscription, runs an operational deep-dive analysis (via its own Azure OpenAI deployment), and publishes the response to queue `agent-responses`.
-4. The **Orchestrator** receives the Partner Agent response from the queue, combines both analyses, and returns the consolidated result to the Client.
+2. The **Orchestrator** invokes the **Primary Agent** (territory analysis via Azure OpenAI), then resolves the Partner Agent's **A2A Agent Card** at `http://localhost:8072/.well-known/agent.json` and calls it via the A2A protocol.
+3. The **Partner Agent** receives the A2A request, runs an operational deep-dive analysis (via its own Azure OpenAI deployment), and returns the result through the A2A response.
+4. The **Orchestrator** receives the Partner Agent response, combines both analyses, and returns the consolidated result to the Client.
 5. The **Client** displays the Primary Agent analysis and the Partner Agent analysis side by side.
 
 ### Suggested Test Questions
 
 | # | Question |
 |---|---|
-| 1 | *Analyze the opportunity for launching a 350ml Classic Cola can in the Southeast region. Which territories show the highest potential based on current brand performance?* |
-| 2 | *Zero Cola has been declining in the Northeast region over the last two quarters. What's driving the drop, and which territories need immediate attention?* |
+| 1 | *Analyze the opportunity for launching a 350ml Velvet Ember can in the Southeast region. Which territories show the highest potential based on current brand performance?* |
+| 2 | *Midnight Drift has been declining in the Northeast region over the last two quarters. What's driving the drop, and which territories need immediate attention?* |
 | 3 | *We're rationalizing the product portfolio in the Midwest region. Which low-performing SKUs should we consider discontinuing, and what's the risk of losing shelf space?* |
-| 4 | *Summer peak is approaching. Based on last year's performance, which territories in the South region need increased distribution capacity for the Classic Cola 2L package?* |
+| 4 | *Summer peak is approaching. Based on last year's performance, which territories in the South region need increased distribution capacity for the Velvet Ember 2L package?* |
 
 ### Stopping the Demo
 

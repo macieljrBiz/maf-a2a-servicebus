@@ -2,16 +2,29 @@
 # Cloud & AI Solutions Architect
 
 import asyncio
-import json
 import logging
 import os
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
+from a2a.server.agent_execution.agent_executor import AgentExecutor
+from a2a.server.apps.jsonrpc.starlette_app import A2AStarletteApplication
+from a2a.server.request_handlers.default_request_handler import DefaultRequestHandler
+from a2a.server.tasks.inmemory_task_store import InMemoryTaskStore
+from a2a.types import (
+    AgentCapabilities,
+    AgentCard,
+    AgentSkill,
+    Message,
+    Role,
+    TaskState,
+    TaskStatus,
+    TaskStatusUpdateEvent,
+    TextPart,
+)
 from azure.identity import DefaultAzureCredential
 from azure.identity.aio import DefaultAzureCredential as AsyncDefaultAzureCredential
-from azure.servicebus import ServiceBusMessage
-from azure.servicebus.aio import ServiceBusClient
 from azure.storage.blob.aio import BlobServiceClient
 from dotenv import load_dotenv
 
@@ -126,11 +139,11 @@ operational deep-dive on the recommended territories.
 
 | Cluster          | Age Range | Preferred Products                        | Avg Weekly Units | Channel Preference         | High-Concentration Territories             |
 |------------------|-----------|-------------------------------------------|------------------|----------------------------|--------------------------------------------|
-| Young Urban      | 18-29     | Zero Cola 350ml Can, Citrus Fizz 350ml    | 3.2              | Convenience, Food Service  | NE-NYC, W-LAX, W-SFO, SE-MIA, S-AUS       |
-| Family Household | 30-49     | Classic Cola 2L, Citrus Fizz 2L           | 5.8              | Grocery, Mass Retail       | SE-ATL, MW-CHI, S-DAL, S-HOU, SE-ORL      |
-| Health Conscious | 25-44     | Zero Cola 500ml, Light Cola 350ml         | 2.4              | Grocery, Convenience       | NE-BOS, W-SFO, W-PDX, W-SEA, NE-DC        |
-| Value Seekers    | 35-55     | Classic Cola 2L, Tropical Pop 2L          | 4.6              | Mass Retail, Grocery       | MW-DET, MW-CLE, S-MEM, NE-BUF, NE-PIT     |
-| Premium On-the-Go| 22-40     | Classic Cola 500ml, Zero Cola 500ml       | 4.1              | Convenience, Food Service  | SE-ATL, NE-NYC, S-DAL, W-LAX, SE-NSH      |
+| Young Urban      | 18-29     | Midnight Drift 350ml Can, Golden Breeze 350ml    | 3.2              | Convenience, Food Service  | NE-NYC, W-LAX, W-SFO, SE-MIA, S-AUS       |
+| Family Household | 30-49     | Velvet Ember 2L, Golden Breeze 2L           | 5.8              | Grocery, Mass Retail       | SE-ATL, MW-CHI, S-DAL, S-HOU, SE-ORL      |
+| Health Conscious | 25-44     | Midnight Drift 500ml, Silver Mist 350ml         | 2.4              | Grocery, Convenience       | NE-BOS, W-SFO, W-PDX, W-SEA, NE-DC        |
+| Value Seekers    | 35-55     | Velvet Ember 2L, Coral Bloom 2L          | 4.6              | Mass Retail, Grocery       | MW-DET, MW-CLE, S-MEM, NE-BUF, NE-PIT     |
+| Premium On-the-Go| 22-40     | Velvet Ember 500ml, Midnight Drift 500ml       | 4.1              | Convenience, Food Service  | SE-ATL, NE-NYC, S-DAL, W-LAX, SE-NSH      |
 
 ### Seasonal Demand Patterns (Index, 100 = Annual Average)
 
@@ -186,7 +199,7 @@ operational deep-dive on the recommended territories.
 | MW-CHI    | 1,760                     | 1,820                    | +60  | Low                   |
 | NE-NYC    | 1,950                     | 1,980                    | +30  | Medium                |
 
-### Zero Cola — Northeast Retail Shelf & Competitive Intelligence
+### Midnight Drift — Northeast Retail Shelf & Competitive Intelligence
 
 | Territory | Shelf Share (ours) | Competitor Shelf Share | New Competitor SKUs (last 6mo) | Promo Frequency (wk) | Promo Lift |
 |-----------|--------------------|-----------------------|--------------------------------|-----------------------|------------|
@@ -218,113 +231,178 @@ async def upload_log(correlation_id: str, component: str, log_lines: list[str]):
         await container.upload_blob(name=blob_name, data=content, overwrite=True)
 
 
-async def send_to_queue(queue_name: str, payload: dict):
-    namespace = os.environ["SERVICEBUS_NAMESPACE"]
-    async with ServiceBusClient(namespace, credential=async_credential) as client:
-        sender = client.get_queue_sender(queue_name=queue_name)
-        async with sender:
-            msg = ServiceBusMessage(
-                body=json.dumps(payload),
-                content_type="application/json",
-            )
-            await sender.send_messages(msg)
-
-
 # ---------------------------------------------------------------------------
-# Service Bus Receiver Loop — Partner Agent
+# A2A Executor — bridges A2A protocol requests to the Partner Agent
 # ---------------------------------------------------------------------------
 
-async def handle_message(body: dict):
-    log_lines: list[str] = []
+class PartnerAgentExecutor(AgentExecutor):
+    """Bridges incoming A2A requests to the MAF Partner Agent."""
 
-    def log(message: str, cid: str = ""):
-        entry = f"[{_timestamp()}] [{cid}] {message}"
-        log_lines.append(entry)
-        logging.info(entry)
-
-    correlation_id = body.get("correlation_id", "unknown")
-    question = body.get("question", "")
-    primary_analysis = body.get("primary_analysis", "")
-
-    log("Received request from Service Bus", correlation_id)
-
-    # --- Invoke Partner Agent via MAF ---
-    log("Invoking Partner Agent", correlation_id)
-
-    partner_client = OpenAIChatClient(
-        azure_endpoint=os.environ["PARTNER_AGENT_OPENAI_ENDPOINT"],
-        credential=credential,
-        model=os.environ["PARTNER_AGENT_MODEL_DEPLOYMENT"],
-    )
-    partner_agent = partner_client.as_agent(
-        name="PartnerAgent",
-        instructions=PARTNER_AGENT_SYSTEM_PROMPT,
-    )
-
-    prompt = (
-        f"## Original Question\n{question}\n\n"
-        f"## Primary Agent Analysis\n{primary_analysis}\n\n"
-        "Based on the Primary Agent's territory analysis above, provide your "
-        "operational deep-dive focusing on the recommended territories. Analyze "
-        "consumption clusters, retail density, distribution coverage, and "
-        "demand patterns."
-    )
-
-    partner_result = await partner_agent.run(prompt)
-    partner_analysis = str(partner_result)
-
-    log("Partner Agent completed", correlation_id)
-
-    # --- Send response to queue ---
-    log("Publishing response to Service Bus queue", correlation_id)
-
-    response_payload = {
-        "correlation_id": correlation_id,
-        "partner_analysis": partner_analysis,
-    }
-    await send_to_queue("agent-responses", response_payload)
-
-    log("Response published", correlation_id)
-
-    # Upload logs (best-effort)
-    try:
-        await upload_log(correlation_id, "partner-agent", log_lines)
-    except Exception as e:
-        logging.warning(f"Failed to upload partner-agent logs: {e}")
-
-
-async def receiver_loop():
-    namespace = os.environ["SERVICEBUS_NAMESPACE"]
-    logging.info("Partner Agent started — waiting for messages on Service Bus")
-
-    async with ServiceBusClient(namespace, credential=async_credential) as sb_client:
-        receiver = sb_client.get_subscription_receiver(
-            topic_name="agent-requests",
-            subscription_name="partner-agent-sub",
+    def __init__(self):
+        client = OpenAIChatClient(
+            azure_endpoint=os.environ["PARTNER_AGENT_OPENAI_ENDPOINT"],
+            credential=credential,
+            model=os.environ["PARTNER_AGENT_MODEL_DEPLOYMENT"],
         )
-        async with receiver:
-            while True:
-                msgs = await receiver.receive_messages(
-                    max_wait_time=30,
-                    max_message_count=1,
+        self.agent = client.as_agent(
+            name="PartnerAgent",
+            instructions=PARTNER_AGENT_SYSTEM_PROMPT,
+        )
+
+    async def execute(self, context, event_queue) -> None:
+        log_lines: list[str] = []
+
+        def log(message: str, cid: str = ""):
+            entry = f"[{_timestamp()}] [{cid}] {message}"
+            log_lines.append(entry)
+            logging.info(entry)
+
+        user_text = context.get_user_input() or "Hello"
+        task_id = context.task_id or str(uuid.uuid4())
+        context_id = context.context_id or str(uuid.uuid4())
+
+        log("Received A2A request", task_id)
+
+        # Signal that the agent is working
+        await event_queue.enqueue_event(
+            TaskStatusUpdateEvent(
+                task_id=task_id,
+                context_id=context_id,
+                status=TaskStatus(state=TaskState.working),
+                final=False,
+            )
+        )
+
+        try:
+            log("Invoking Partner Agent", task_id)
+            response = await self.agent.run(user_text)
+
+            parts = [
+                TextPart(text=msg.text)
+                for msg in response.messages
+                if msg.text
+            ]
+            if not parts:
+                parts = [TextPart(text=str(response))]
+
+            log("Partner Agent completed", task_id)
+
+            await event_queue.enqueue_event(
+                TaskStatusUpdateEvent(
+                    task_id=task_id,
+                    context_id=context_id,
+                    status=TaskStatus(
+                        state=TaskState.completed,
+                        message=Message(
+                            message_id=str(uuid.uuid4()),
+                            role=Role.agent,
+                            parts=parts,
+                        ),
+                    ),
+                    final=True,
                 )
-                for msg in msgs:
-                    try:
-                        body = json.loads(str(msg))
-                    except (json.JSONDecodeError, TypeError):
-                        raw = msg.body
-                        if isinstance(raw, bytes):
-                            body = json.loads(raw.decode("utf-8"))
-                        else:
-                            body = json.loads(b"".join(raw).decode("utf-8"))
+            )
 
-                    try:
-                        await handle_message(body)
-                        await receiver.complete_message(msg)
-                    except Exception:
-                        logging.exception("Error processing message")
-                        await receiver.abandon_message(msg)
+        except asyncio.CancelledError:
+            raise
+        except Exception as e:
+            log(f"Partner Agent error: {e}", task_id)
+            await event_queue.enqueue_event(
+                TaskStatusUpdateEvent(
+                    task_id=task_id,
+                    context_id=context_id,
+                    status=TaskStatus(
+                        state=TaskState.failed,
+                        message=Message(
+                            message_id=str(uuid.uuid4()),
+                            role=Role.agent,
+                            parts=[TextPart(text=f"Agent error: {e}")],
+                        ),
+                    ),
+                    final=True,
+                )
+            )
 
+        # Upload logs (best-effort)
+        try:
+            await upload_log(task_id, "partner-agent", log_lines)
+        except Exception as e:
+            logging.warning(f"Failed to upload partner-agent logs: {e}")
+
+    async def cancel(self, context, event_queue) -> None:
+        task_id = context.task_id or str(uuid.uuid4())
+        context_id = context.context_id or str(uuid.uuid4())
+        await event_queue.enqueue_event(
+            TaskStatusUpdateEvent(
+                task_id=task_id,
+                context_id=context_id,
+                status=TaskStatus(state=TaskState.canceled),
+                final=True,
+            )
+        )
+
+
+# ---------------------------------------------------------------------------
+# A2A Agent Card — self-describes the Partner Agent for discovery
+# ---------------------------------------------------------------------------
+
+def get_partner_agent_card(url: str) -> AgentCard:
+    return AgentCard(
+        name="PartnerDistributionAnalyst",
+        description=(
+            "Operational deep-dive agent: analyzes consumption clusters, "
+            "retail density, distribution coverage, and demand patterns."
+        ),
+        url=url,
+        version="1.0.0",
+        default_input_modes=["text"],
+        default_output_modes=["text"],
+        capabilities=AgentCapabilities(streaming=True, push_notifications=False),
+        skills=[
+            AgentSkill(
+                id="operational_analysis",
+                name="OperationalAnalysis",
+                description=(
+                    "Analyzes partner distribution data including retail outlet "
+                    "coverage, route efficiency, consumption clusters, and "
+                    "seasonal demand patterns for recommended territories."
+                ),
+                tags=["distribution", "retail", "operations", "territory"],
+                examples=[
+                    "Analyze distribution coverage in the Southeast region.",
+                    "What are the consumption patterns for Midnight Drift in the Northeast?",
+                ],
+            ),
+        ],
+    )
+
+
+# ---------------------------------------------------------------------------
+# Entry point — A2A Server
+# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    asyncio.run(receiver_loop())
+    import uvicorn
+
+    host = "localhost"
+    port = 8072
+    url = f"http://{host}:{port}/"
+
+    agent_card = get_partner_agent_card(url)
+    executor = PartnerAgentExecutor()
+    task_store = InMemoryTaskStore()
+    request_handler = DefaultRequestHandler(
+        agent_executor=executor,
+        task_store=task_store,
+    )
+
+    a2a_app = A2AStarletteApplication(
+        agent_card=agent_card,
+        http_handler=request_handler,
+    )
+
+    logging.info("Partner Agent A2A server starting...")
+    logging.info(f"  Listening  : {url}")
+    logging.info(f"  Agent Card : {url}.well-known/agent.json")
+
+    uvicorn.run(a2a_app.build(), host=host, port=port)
